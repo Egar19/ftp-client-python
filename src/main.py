@@ -66,6 +66,7 @@ def menu():
 5. Hapus file
 6. Upload file
 7. Download file
+8. Download direktori
 0. Keluar
 """)
 
@@ -166,6 +167,39 @@ def download_file(ftp):
     except Exception as e:
         print(f"❌ Gagal download: {e}")
 
+def download_directory(ftp):
+    remote_dir = input("Nama direktori di server: ").strip()
+    local_dir = input("Folder tujuan lokal: ").strip()
+
+    if not remote_dir or not local_dir:
+        print("❌ Nama direktori tidak boleh kosong")
+        return
+
+    def recursive_download(ftp_conn, remote_path, local_path):
+        os.makedirs(local_path, exist_ok=True)
+        try:
+            ftp_conn.cwd(remote_path)
+            items = ftp_conn.nlst()
+        except Exception as e:
+            print(f"❌ Gagal membuka direktori: {e}")
+            return
+
+        for item in items:
+            try:
+                ftp_conn.cwd(item)
+                ftp_conn.cwd("..")
+                recursive_download(ftp_conn, f"{remote_path}/{item}", os.path.join(local_path, item))
+            except:
+                try:
+                    with open(os.path.join(local_path, item), 'wb') as f:
+                        ftp_conn.retrbinary(f"RETR {item}", f.write)
+                    print(f"⬇️ File '{item}' berhasil diunduh.")
+                except Exception as e:
+                    print(f"❌ Gagal unduh '{item}': {e}")
+
+    recursive_download(ftp, remote_dir, local_dir)
+
+
 def main():
     ftp = login_ftp()
     if not ftp:
@@ -173,7 +207,7 @@ def main():
 
     while True:
         menu()
-        choice = input("Pilih menu (1-8): ").strip()
+        choice = input("Pilih menu (0-8): ").strip()
 
         if choice == '1':
             list_dir(ftp)
@@ -189,6 +223,8 @@ def main():
             upload_file(ftp)
         elif choice == '7':
             download_file(ftp)
+        elif choice == '8':
+            download_directory(ftp)
         elif choice == '0':
             print("📤 Keluar...")
             ftp.quit()
