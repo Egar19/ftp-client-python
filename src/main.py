@@ -66,7 +66,7 @@ def menu():
 5. Hapus file
 6. Upload file
 7. Download file
-8. Keluar
+0. Keluar
 """)
 
 def list_dir(ftp):
@@ -189,7 +189,7 @@ def main():
             upload_file(ftp)
         elif choice == '7':
             download_file(ftp)
-        elif choice == '8':
+        elif choice == '0':
             print("📤 Keluar...")
             ftp.quit()
             break
